@@ -4,6 +4,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.sql.SQLException
+import java.time.LocalDateTime
 
 
 class JsonStorageHandler {
@@ -29,7 +30,7 @@ class JsonStorageHandler {
 			val st = conn?.createStatement()
 			if (st != null) {
 				st.executeUpdate("CREATE TABLE IF NOT EXISTS jobs (id INTEGER PRIMARY KEY, title TEXT, jobid TEXT," +
-						"description TEXT, pay TEXT)")
+						"description TEXT, pay TEXT, date TEXT)")
 				st.close()
 			}
 		} catch (e: SQLException) {
@@ -41,7 +42,7 @@ class JsonStorageHandler {
 		try {
 			val st = conn?.createStatement()
 			if (st != null) {
-				st.executeUpdate("INSERT INTO jobs (title, jobid, description, pay) VALUES ('${title}', '${jobid}', '${description}', '${pay}')")
+				st.executeUpdate("INSERT INTO jobs (title, jobid, description, pay, date) VALUES ('${title}', '${jobid}', '${description}', '${pay}', '${LocalDateTime.now()}')")
 				st.close()
 			}
 		} catch (e: SQLException) {
