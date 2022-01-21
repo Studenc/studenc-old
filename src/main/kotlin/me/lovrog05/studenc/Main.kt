@@ -6,14 +6,36 @@ fun main(args: Array<String>) {
 	val scraper: StudencScraper = StudencScraper(url)
 	var jobsArray: ArrayList<HashMap<String, String>> = scraper.getJobs()
 
-	val jsonStorageHandler: JsonStorageHandler = JsonStorageHandler()
+	val jobsStorageHandler: JobsStorageHandler = JobsStorageHandler()
 	for (job in jobsArray) {
 		if (job["jobId"]!! != "" && job["title"]!! != "" && job["description"]!! != "" && job["pay"]!! != "") {
-			if (jsonStorageHandler.queryByJobId(job["jobId"]!!)) {
-				jsonStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!)
+			if (jobsStorageHandler.queryByJobId(job["jobId"]!!)) {
+				jobsStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!)
 			}
 		}
 	}
 
-	jsonStorageHandler.close()
+	var keywordsFull: HashMap<String, Int> = jobsStorageHandler.getKeywoards()
+	var keywords: ArrayList<String> = ArrayList(keywordsFull.keys)
+
+	var statistic: Statistics = Statistics(keywords)
+
+	var hits: ArrayList<HashMap<String, Int?>> = ArrayList()
+	for (job in jobsArray) {
+		hits.add(job["description"]?.let { statistic.getHitsInString(it) }!!)
+	}
+
+	keywords.forEach {
+		for (hit in hits) {
+			if (hit.containsKey(it)) {
+				keywordsFull[it] = keywordsFull[it]?.plus(hit[it]!!) ?: 0
+			}
+		}
+	}
+
+	for ((word, hits) in keywordsFull) {
+		jobsStorageHandler.updateKeyword(word, hits)
+	}
+
+	jobsStorageHandler.close()
 }
