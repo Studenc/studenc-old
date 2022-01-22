@@ -52,7 +52,53 @@ class JobsStorageHandler {
 		}
 	}
 
-	fun queryByJobId(jobid: String): Boolean {
+	fun getAllJobs(): ArrayList<HashMap<String, String>> {
+		var jobs: ArrayList<HashMap<String, String>> = ArrayList()
+		try {
+			var rs: ResultSet? = null
+			val st = conn?.createStatement()
+			if (st != null) {
+				rs = st.executeQuery("SELECT * FROM jobs")
+				while (rs.next()) {
+					var hmp: HashMap<String, String> = HashMap()
+					hmp["jobId"] = rs.getString("jobid")
+					hmp["title"] = rs.getString("title")
+					hmp["pay"] = rs.getString("pay")
+					hmp["description"] = rs.getString("description")
+					jobs.add(hmp)
+				}
+				st.close()
+			}
+		} catch (e: SQLException) {
+			println("queryJobById: $e.message")
+		}
+		return jobs
+	}
+
+	fun getJobById(jobid: String): HashMap<String, String> {
+		var job: HashMap<String, String> = HashMap()
+
+		try {
+			var rs: ResultSet? = null
+			val st = conn?.createStatement()
+			if (st != null) {
+				rs = st.executeQuery("SELECT * FROM jobs WHERE jobid = '$jobid'")
+				while (rs.next()) {
+					var hmp: HashMap<String, String> = HashMap()
+					hmp["jobId"] = rs.getString("jobid")
+					hmp["title"] = rs.getString("title")
+					hmp["pay"] = rs.getString("pay")
+					hmp["description"] = rs.getString("description")
+				}
+				st.close()
+			}
+		} catch (e: SQLException) {
+			println("queryJobById: $e.message")
+		}
+		return job
+	}
+
+	fun isJobIdInDB(jobid: String): Boolean {
 		var isin: Boolean = false
 
 		try {
@@ -96,6 +142,24 @@ class JobsStorageHandler {
 				rs = st.executeQuery("SELECT * FROM keywords WHERE word = '$word'")
 				while (rs.next()) {
 					hits = rs.getInt(columnName)
+				}
+				st.close()
+			}
+		} catch (e: SQLException) {
+			println("getWordHits: $e.message")
+		}
+		return hits
+	}
+
+	fun getWordHits(word: String): Int {
+		var hits: Int = 0
+		try {
+			var rs: ResultSet? = null
+			val st = conn?.createStatement()
+			if (st != null) {
+				rs = st.executeQuery("SELECT * FROM keywords WHERE word = '$word'")
+				while (rs.next()) {
+					hits = rs.getInt("hits")
 				}
 				st.close()
 			}
@@ -159,7 +223,7 @@ class JobsStorageHandler {
 		try {
 			val st = conn?.createStatement()
 			if (st != null) {
-				st.executeUpdate("INSERT INTO keywords (word, hits) VALUES ($word, $hits)")
+				st.executeUpdate("INSERT INTO keywords (word, hits) VALUES ('$word', '$hits')")
 				st.close()
 			}
 		} catch (e: SQLException) {

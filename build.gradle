@@ -15,6 +15,9 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
     implementation 'com.github.yannrichet:JMathPlot:1.0.1'
+    implementation "io.ktor:ktor-server-core:1.6.7"
+    implementation "io.ktor:ktor-server-netty:1.6.7"
+    implementation 'ch.qos.logback:logback-classic:1.2.10'
 }
 
 
@@ -28,6 +31,7 @@ compileTestKotlin {
 
 application {
     mainClassName = 'MainKt'
+    mainClass = 'MainKt'
 }
 
 
