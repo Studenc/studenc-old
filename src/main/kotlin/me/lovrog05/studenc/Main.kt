@@ -15,26 +15,20 @@ fun main(args: Array<String>) {
 		}
 	}
 
-	var keywordsFull: HashMap<String, Int> = jobsStorageHandler.getKeywoards()
-	var keywords: ArrayList<String> = ArrayList(keywordsFull.keys)
+	val keywordsFull: HashMap<String, Int> = jobsStorageHandler.getKeywoardsFull()
+	val keywords: ArrayList<String> = ArrayList(keywordsFull.keys)
 
-	var statistic: Statistics = Statistics(keywords)
+	val statistic: Statistics = Statistics(keywords)
+	val recordDate: String = jobsStorageHandler.makeKeywordRecordColumn()
 
-	var hits: ArrayList<HashMap<String, Int?>> = ArrayList()
 	for (job in jobsArray) {
-		hits.add(job["description"]?.let { statistic.getHitsInString(it) }!!)
-	}
-
-	keywords.forEach {
-		for (hit in hits) {
-			if (hit.containsKey(it)) {
-				keywordsFull[it] = keywordsFull[it]?.plus(hit[it]!!) ?: 0
+		if (!jobsStorageHandler.queryByJobId(job["jobId"]!!)) {
+			for ((word, hits) in statistic.getHitsInString(job["description"]!!)) {
+				if (hits != null) {
+					jobsStorageHandler.updateKeyword(word, hits, recordDate)
+				} else {println("null")}
 			}
 		}
-	}
-
-	for ((word, hits) in keywordsFull) {
-		jobsStorageHandler.updateKeyword(word, hits)
 	}
 
 	jobsStorageHandler.close()
