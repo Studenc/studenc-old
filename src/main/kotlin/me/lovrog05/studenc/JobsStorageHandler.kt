@@ -84,17 +84,17 @@ class JobsStorageHandler {
 			if (st != null) {
 				rs = st.executeQuery("SELECT * FROM jobs WHERE jobid = '$jobid'")
 				while (rs.next()) {
-					var hmp: HashMap<String, String> = HashMap()
-					hmp["jobId"] = rs.getString("jobid")
-					hmp["title"] = rs.getString("title")
-					hmp["pay"] = rs.getString("pay")
-					hmp["description"] = rs.getString("description")
+					job["jobId"] = rs.getString("jobid")
+					job["title"] = rs.getString("title")
+					job["pay"] = rs.getString("pay")
+					job["description"] = rs.getString("description")
 				}
 				st.close()
 			}
 		} catch (e: SQLException) {
 			println("queryJobById: $e.message")
 		}
+		println("job: $job, id: $jobid")
 		return job
 	}
 
