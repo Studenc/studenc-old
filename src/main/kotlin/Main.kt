@@ -11,71 +11,45 @@ import me.lovrog05.studenc.Studenc
 
 fun main(args: Array<String>) {
 	val url: String = "https://www.studentski-servis.com/studenti/prosta-dela?kljb=&page=1&isci=1&sort=&dm1=1&skD%5B%5D=004&skD%5B%5D=A832&skD%5B%5D=A210&skD%5B%5D=A055&skD%5B%5D=A078&skD%5B%5D=A090&skD%5B%5D=A095&regija%5B%5D=ljubljana-z-okolico&regija%5B%5D=vrhnika-z-okolico&hourly_rate=4.98%3B21"
-	val dfk: ArrayList<String> = ArrayList()
-	dfk.add("PHP")
-	dfk.add("JavaScript")
-	dfk.add("Python")
-	dfk.add("Java")
-	dfk.add("Kotlin")
 
-	val studenc: Studenc = Studenc(url, dfk)
+	val studenc: Studenc = Studenc(url)
 	studenc.requestAndStoreJobs()
 	var lastUpdated: Long = System.currentTimeMillis()
 	embeddedServer(Netty, port=6969) {
 		install(ContentNegotiation)
 		routing {
 			route("/") {
-				get() {
-					call.respondText("Welcome to StudencProgrammerAPI!", status=HttpStatusCode.OK)
+				get {
+					call.respondRedirect("http://127.0.0.1:5500/index.html")
 				}
 			}
 			route("/keywordhits") {
-				get("{word}") {
-					val response = call.parameters["word"]?.let { it1 -> studenc.getKeywordHits(it1) }
-					val gson: Gson = Gson()
-					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
-				}
-			}
-			route("/keywords") {
-				get{
-					val response = studenc.getKeywords()
-					val gson: Gson = Gson()
-					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
-				}
-			}
-			route("/keywordscronicaldata") {
-				get{
-					val response = studenc.getKeywordsCronicalData()
-					val gson: Gson = Gson()
-					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
-				}
-				get("{word}") {
-					val response = call.parameters["word"]?.let { it1 -> studenc.getKeywordCronicalData(it1) }
-					val gson: Gson = Gson()
+				get {
+					val response = call.request.queryParameters["word"]?.let { it1 -> studenc.getKeywordHits(it1) }
+					val gson = Gson()
 					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
 				}
 			}
 			route("jobs") {
-				get{
+				get {
 					val response: HashMap<String, ArrayList<HashMap<String, String>>> = HashMap()
 					response["jobs"] = studenc.getStoredJobs()
-					val gson: Gson = Gson()
+					val gson = Gson()
 					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
 				}
 				get("{id}") {
 					val response = call.parameters["id"]?.let { it1 -> studenc.getJobById(it1) }
 					if (response?.isEmpty() == false) {
-						val gson: Gson = Gson()
+						val gson = Gson()
 						call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
 					} else {
 						call.respondText("404", status=HttpStatusCode.NotFound)
 					}
 				}
-
 			}
 			route("/requestupdate") {
-				post{
-					if ((System.currentTimeMillis() - lastUpdated)/1000 >= 43200) {
+				post {
+					if ((System.currentTimeMillis() - lastUpdated)/1000 >= 86400) {
 						studenc.requestAndStoreJobs()
 						call.respondText("UPDATE APPROVED", status=HttpStatusCode.OK)
 					} else {

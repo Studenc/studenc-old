@@ -1,20 +1,10 @@
 package me.lovrog05.studenc
 
-class Studenc(private val url: String, defaultKeywords: ArrayList<String>) {
+class Studenc(private val url: String) {
 	private val scraper: StudencScraper = StudencScraper(url)
 	private val jobsStorageHandler: JobsStorageHandler = JobsStorageHandler()
-	init {
-		for (kwd in defaultKeywords) {
-			jobsStorageHandler.insertKeywords(kwd, 0)
-		}
 
-	}
-	private val keywordsFull: HashMap<String, Int> = jobsStorageHandler.getKeywordsFull()
-	private val keywords: ArrayList<String> = ArrayList(keywordsFull.keys)
-
-	private val statistic: Statistics = Statistics(keywords)
-
-	fun requestAndStoreJobs(updateKeywordHits: Boolean = true) {
+	fun requestAndStoreJobs() {
 		var jobsArray: ArrayList<HashMap<String, String>> = scraper.getJobs()
 		for (job in jobsArray) {
 			if (job["jobId"]!! != "" && job["title"]!! != "" && job["description"]!! != "" && job["pay"]!! != "") {
@@ -22,9 +12,6 @@ class Studenc(private val url: String, defaultKeywords: ArrayList<String>) {
 					jobsStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!)
 				}
 			}
-		}
-		if (updateKeywordHits) {
-			updateKeywordHits(jobsArray)
 		}
 	}
 
@@ -36,39 +23,15 @@ class Studenc(private val url: String, defaultKeywords: ArrayList<String>) {
 		return jobsStorageHandler.getJobById(id)
 	}
 
-	fun getKeywords(): HashMap<String, Int> {
-		return jobsStorageHandler.getKeywordsFull()
-	}
-
-	fun getKeywordCronicalData(word: String): HashMap<String, Int> {
-		return jobsStorageHandler.getKeywordCronicalData(word)
-	}
-
-	fun getKeywordsCronicalData(): HashMap<String, HashMap<String, Int>> {
-		return jobsStorageHandler.getKeywordsCronicalData()
-	}
-
-	fun getKeywordHits(word: String): HashMap<String, Int> {
-		var hmp: HashMap<String, Int> = HashMap()
-		hmp[word] = jobsStorageHandler.getWordHits(word)
-		return hmp
-	}
-
-	private fun updateKeywordHits(jobsArray: ArrayList<HashMap<String, String>>) {
-		val recordDate: String = jobsStorageHandler.makeKeywordRecordColumn()
-		for (job in jobsArray) {
-			if (!jobsStorageHandler.isJobIdInDB(job["jobId"]!!)) {
-				for ((word, hits) in statistic.getHitsInString(job["description"]!!)) {
-					if (hits != null) {
-						jobsStorageHandler.updateKeyword(word, hits, recordDate)
-					} else {println("null")}
-				}
-			}
+	fun getKeywordHits(word: String): HashMap<String, Int?> {
+		var hits: HashMap<String, Int?> = HashMap()
+		for (job in getStoredJobs()) {
+			hits[job["dateSpotted"]!!] = hits[job["dateSpotted"]!!]?.plus(Statistics.getHitsInString(job["description"]!!, word))
 		}
+		return hits
 	}
 
 	fun close() {
 		jobsStorageHandler.close()
 	}
-
 }
