@@ -25,9 +25,13 @@ class Studenc(private val url: String) {
 
 	fun getKeywordHits(word: String): HashMap<String, Int?> {
 		var hits: HashMap<String, Int?> = HashMap()
+		var totalHits: Int = 0
 		for (job in getStoredJobs()) {
-			hits[job["dateSpotted"]!!] = hits[job["dateSpotted"]!!]?.plus(Statistics.getHitsInString(job["description"]!!, word))
+			var currentHits: Int = Statistics.getHitsInString(job["description"]!!, word)
+			hits[job["dateSpotted"]!!] = hits[job["dateSpotted"]!!]?.plus(currentHits) ?: currentHits
+			totalHits += currentHits
 		}
+		hits["total"] = totalHits
 		return hits
 	}
 

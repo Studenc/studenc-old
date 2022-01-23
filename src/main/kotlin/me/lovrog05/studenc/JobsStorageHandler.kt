@@ -4,8 +4,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.sql.SQLException
-import java.time.LocalDateTime
-
+import java.time.LocalDate
 
 class JobsStorageHandler {
 	var conn: Connection? = null
@@ -43,7 +42,7 @@ class JobsStorageHandler {
 			val st = conn?.createStatement()
 			if (st != null) {
 				st.executeUpdate("INSERT OR IGNORE INTO jobs (title, jobid, description, pay, date) VALUES " +
-						"('${title}', '${jobid}', '${description}', '${pay}', '${LocalDateTime.now()}')")
+						"('${title}', '${jobid}', '${description}', '${pay}', '${LocalDate.now()}')")
 				st.close()
 			}
 		} catch (e: SQLException) {
