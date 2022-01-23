@@ -8,7 +8,7 @@ class Studenc(private val url: String) {
 		var jobsArray: ArrayList<HashMap<String, String>> = scraper.getJobs()
 		for (job in jobsArray) {
 			if (job["jobId"]!! != "" && job["title"]!! != "" && job["description"]!! != "" && job["pay"]!! != "") {
-				if (jobsStorageHandler.isJobIdInDB(job["jobId"]!!)) {
+				if (!jobsStorageHandler.isJobIdInDB(job["jobId"]!!)) {
 					jobsStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!)
 				}
 			}
