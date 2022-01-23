@@ -31,8 +31,8 @@ class JobsStorageHandler {
 			val st = conn?.createStatement()
 			if (st != null) {
 				st.executeUpdate("CREATE TABLE IF NOT EXISTS jobs (id INTEGER PRIMARY KEY, title TEXT, jobid TEXT," +
-						"description TEXT, pay TEXT, date TEXT)")
-				st.executeUpdate("CREATE TABLE IF NOT EXISTS keywords (id INTEGER PRIMARY KEY, word TEXT, hits INTEGER)")
+						"description TEXT, pay TEXT, date TEXT, UNIQUE(jobid))")
+				st.executeUpdate("CREATE TABLE IF NOT EXISTS keywords (id INTEGER PRIMARY KEY, word TEXT, hits INTEGER, UNIQUE(word))")
 				st.close()
 			}
 		} catch (e: SQLException) {
@@ -44,7 +44,7 @@ class JobsStorageHandler {
 		try {
 			val st = conn?.createStatement()
 			if (st != null) {
-				st.executeUpdate("INSERT INTO jobs (title, jobid, description, pay, date) VALUES ('${title}', '${jobid}', '${description}', '${pay}', '${LocalDateTime.now()}')")
+				st.executeUpdate("INSERT OR IGNORE INTO jobs (title, jobid, description, pay, date) VALUES ('${title}', '${jobid}', '${description}', '${pay}', '${LocalDateTime.now()}')")
 				st.close()
 			}
 		} catch (e: SQLException) {
@@ -65,6 +65,7 @@ class JobsStorageHandler {
 					hmp["title"] = rs.getString("title")
 					hmp["pay"] = rs.getString("pay")
 					hmp["description"] = rs.getString("description")
+					hmp["dateSpotted"] = rs.getString("date")
 					jobs.add(hmp)
 				}
 				st.close()
@@ -88,13 +89,13 @@ class JobsStorageHandler {
 					job["title"] = rs.getString("title")
 					job["pay"] = rs.getString("pay")
 					job["description"] = rs.getString("description")
+					job["dateSpotted"] = rs.getString("date")
 				}
 				st.close()
 			}
 		} catch (e: SQLException) {
 			println("queryJobById: $e.message")
 		}
-		println("job: $job, id: $jobid")
 		return job
 	}
 
@@ -105,8 +106,12 @@ class JobsStorageHandler {
 			var rs: ResultSet? = null
 			val st = conn?.createStatement()
 			if (st != null) {
-				rs = st.executeQuery("SELECT * FROM jobs WHERE jobid = '$jobid'")
-				isin = !rs.next()
+				rs = st.executeQuery("SELECT COUNT(*) FROM jobs WHERE jobid = '$jobid'")
+				while (rs.next()) {
+					if (rs.getInt("COUNT(*)") >= 1) {
+						isin = true
+					}
+				}
 				st.close()
 			}
 		} catch (e: SQLException) {
@@ -115,7 +120,7 @@ class JobsStorageHandler {
 		return isin
 	}
 
-	fun getKeywoardsFull(): HashMap<String, Int> {
+	fun getKeywordsFull(): HashMap<String, Int> {
 		var keywords: HashMap<String, Int> = HashMap()
 		try {
 			var rs: ResultSet? = null
@@ -169,8 +174,41 @@ class JobsStorageHandler {
 		return hits
 	}
 
+	fun getKeywordCronicalData(word: String): HashMap<String, Int> {
+		val keywordColumnNames: ArrayList<String> = getKeywordRecordColumnNames()
+		var wordHMap: HashMap<String, Int> = HashMap()
+		try {
+			var rs: ResultSet? = null
+			val st = conn?.createStatement()
+			if (st != null) {
+				rs = st.executeQuery("SELECT * FROM keywords WHERE word = '$word'")
+				while (rs.next()) {
+					for (date in keywordColumnNames) {
+						if (date.startsWith("2")) {
+							wordHMap[date] = rs.getInt(date)
+						}
+					}
+				}
+				st.close()
+			}
+		} catch (e: SQLException) {
+			println("getWordHits: $e.message")
+		}
+		return wordHMap
+	}
+
+	fun getKeywordsCronicalData(): HashMap<String, HashMap<String, Int>> {
+		val keywords = getKeywordsFull().keys
+		var data: HashMap<String, HashMap<String, Int>> = HashMap()
+
+		for (keyword in keywords) {
+			data[keyword] = getKeywordCronicalData(keyword)
+		}
+		return data
+	}
+
 	fun updateKeyword(word: String, hits: Int, columnName: String) {
-		val keywordsFull: HashMap<String, Int> = getKeywoardsFull()
+		val keywordsFull: HashMap<String, Int> = getKeywordsFull()
 		try {
 			val st = conn?.createStatement()
 			if (st != null) {
@@ -223,7 +261,9 @@ class JobsStorageHandler {
 		try {
 			val st = conn?.createStatement()
 			if (st != null) {
-				st.executeUpdate("INSERT INTO keywords (word, hits) VALUES ('$word', '$hits')")
+				if (!getKeywordsFull().keys.contains(word)) {
+					st.executeUpdate("INSERT OR IGNORE INTO keywords (word, hits) VALUES ('$word', '$hits')")
+				}
 				st.close()
 			}
 		} catch (e: SQLException) {

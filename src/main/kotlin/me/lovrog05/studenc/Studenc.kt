@@ -9,7 +9,7 @@ class Studenc(private val url: String, defaultKeywords: ArrayList<String>) {
 		}
 
 	}
-	private val keywordsFull: HashMap<String, Int> = jobsStorageHandler.getKeywoardsFull()
+	private val keywordsFull: HashMap<String, Int> = jobsStorageHandler.getKeywordsFull()
 	private val keywords: ArrayList<String> = ArrayList(keywordsFull.keys)
 
 	private val statistic: Statistics = Statistics(keywords)
@@ -37,7 +37,15 @@ class Studenc(private val url: String, defaultKeywords: ArrayList<String>) {
 	}
 
 	fun getKeywords(): HashMap<String, Int> {
-		return jobsStorageHandler.getKeywoardsFull()
+		return jobsStorageHandler.getKeywordsFull()
+	}
+
+	fun getKeywordCronicalData(word: String): HashMap<String, Int> {
+		return jobsStorageHandler.getKeywordCronicalData(word)
+	}
+
+	fun getKeywordsCronicalData(): HashMap<String, HashMap<String, Int>> {
+		return jobsStorageHandler.getKeywordsCronicalData()
 	}
 
 	fun getKeywordHits(word: String): HashMap<String, Int> {
@@ -46,9 +54,8 @@ class Studenc(private val url: String, defaultKeywords: ArrayList<String>) {
 		return hmp
 	}
 
-	fun updateKeywordHits(jobsArray: ArrayList<HashMap<String, String>>) {
+	private fun updateKeywordHits(jobsArray: ArrayList<HashMap<String, String>>) {
 		val recordDate: String = jobsStorageHandler.makeKeywordRecordColumn()
-
 		for (job in jobsArray) {
 			if (!jobsStorageHandler.isJobIdInDB(job["jobId"]!!)) {
 				for ((word, hits) in statistic.getHitsInString(job["description"]!!)) {

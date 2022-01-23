@@ -26,24 +26,33 @@ fun main(args: Array<String>) {
 		routing {
 			route("/") {
 				get() {
-					call.respondText("Welcome to StudencProgrammerAPI!")
+					call.respondText("Welcome to StudencProgrammerAPI!", status=HttpStatusCode.OK)
 				}
 			}
 			route("/keywordhits") {
-				get {
-					call.respondText { "ERROR: no word, add /{word}" }
-				}
 				get("{word}") {
 					val response = call.parameters["word"]?.let { it1 -> studenc.getKeywordHits(it1) }
 					val gson: Gson = Gson()
-					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
 				}
 			}
 			route("/keywords") {
 				get{
 					val response = studenc.getKeywords()
 					val gson: Gson = Gson()
-					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
+				}
+			}
+			route("/keywordscronicaldata") {
+				get{
+					val response = studenc.getKeywordsCronicalData()
+					val gson: Gson = Gson()
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
+				}
+				get("{word}") {
+					val response = call.parameters["word"]?.let { it1 -> studenc.getKeywordCronicalData(it1) }
+					val gson: Gson = Gson()
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
 				}
 			}
 			route("jobs") {
@@ -51,7 +60,7 @@ fun main(args: Array<String>) {
 					val response: HashMap<String, ArrayList<HashMap<String, String>>> = HashMap()
 					response["jobs"] = studenc.getStoredJobs()
 					val gson: Gson = Gson()
-					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
 				}
 				get("{id}") {
 					val response = call.parameters["id"]?.let { it1 -> studenc.getJobById(it1) }
@@ -59,7 +68,7 @@ fun main(args: Array<String>) {
 						val gson: Gson = Gson()
 						call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
 					} else {
-						call.respondText("404", status = HttpStatusCode.NotFound)
+						call.respondText("404", status=HttpStatusCode.NotFound)
 					}
 				}
 
@@ -68,9 +77,9 @@ fun main(args: Array<String>) {
 				post{
 					if ((System.currentTimeMillis() - lastUpdated)/1000 >= 43200) {
 						studenc.requestAndStoreJobs()
-						call.respondText("200", status=HttpStatusCode.OK)
+						call.respondText("UPDATE APPROVED", status=HttpStatusCode.OK)
 					} else {
-						call.respondText("425", status = HttpStatusCode.fromValue(425)) //too early
+						call.respondText("UPDATE DENIED - TOO EARLY", status=HttpStatusCode.OK) //too early
 					}
 				}
 			}
