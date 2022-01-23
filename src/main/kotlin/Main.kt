@@ -1,4 +1,7 @@
+import com.google.gson.Gson
 import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
@@ -17,7 +20,9 @@ fun main(args: Array<String>) {
 
 	val studenc: Studenc = Studenc(url, dfk)
 	studenc.requestAndStoreJobs()
+	var lastUpdated: Long = System.currentTimeMillis()
 	embeddedServer(Netty, port=6969) {
+		install(ContentNegotiation)
 		routing {
 			route("/") {
 				get() {
@@ -26,10 +31,47 @@ fun main(args: Array<String>) {
 			}
 			route("/keywordhits") {
 				get {
-					call.respondText { "ERROR: no word" }
+					call.respondText { "ERROR: no word, add /{word}" }
 				}
 				get("{word}") {
 					val response = call.parameters["word"]?.let { it1 -> studenc.getKeywordHits(it1) }
+					val gson: Gson = Gson()
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
+				}
+			}
+			route("/keywords") {
+				get{
+					val response = studenc.getKeywords()
+					val gson: Gson = Gson()
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
+				}
+			}
+			route("jobs") {
+				get{
+					val response: HashMap<String, ArrayList<HashMap<String, String>>> = HashMap()
+					response["jobs"] = studenc.getStoredJobs()
+					val gson: Gson = Gson()
+					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
+				}
+				get("{id}") {
+					val response = call.parameters["id"]?.let { it1 -> studenc.getJobById(it1) }
+					if (response?.isEmpty() == false) {
+						val gson: Gson = Gson()
+						call.respondText(gson.toJson(response).toString(), ContentType.Application.Json)
+					} else {
+						call.respondText("404", status = HttpStatusCode.NotFound)
+					}
+				}
+
+			}
+			route("/requestupdate") {
+				post{
+					if ((System.currentTimeMillis() - lastUpdated)/1000 >= 43200) {
+						studenc.requestAndStoreJobs()
+						call.respondText("200", status=HttpStatusCode.OK)
+					} else {
+						call.respondText("425", status = HttpStatusCode.fromValue(425)) //too early
+					}
 				}
 			}
 

@@ -40,8 +40,10 @@ class Studenc(private val url: String, defaultKeywords: ArrayList<String>) {
 		return jobsStorageHandler.getKeywoardsFull()
 	}
 
-	fun getKeywordHits(word: String): Int {
-		return jobsStorageHandler.getWordHits(word)
+	fun getKeywordHits(word: String): HashMap<String, Int> {
+		var hmp: HashMap<String, Int> = HashMap()
+		hmp[word] = jobsStorageHandler.getWordHits(word)
+		return hmp
 	}
 
 	fun updateKeywordHits(jobsArray: ArrayList<HashMap<String, String>>) {
