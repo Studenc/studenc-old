@@ -29,7 +29,7 @@ class JobsStorageHandler {
 			val st = conn?.createStatement()
 			if (st != null) {
 				st.executeUpdate("CREATE TABLE IF NOT EXISTS jobs (id INTEGER PRIMARY KEY, title TEXT, jobid TEXT," +
-						"description TEXT, pay TEXT, date TEXT, UNIQUE(jobid))")
+						"description TEXT, pay TEXT, date TEXT, workingday TEXT, duration TEXT, spots TEXT, UNIQUE(jobid))")
 				st.close()
 			}
 		} catch (e: SQLException) {
@@ -37,12 +37,13 @@ class JobsStorageHandler {
 		}
 	}
 
-	fun insertJob(title: String, jobid: String, description: String, pay: String) {
+	fun insertJob(title: String, jobid: String, description: String, pay: String, wd: String, dur: String, spots: String) {
 		try {
 			val st = conn?.createStatement()
 			if (st != null) {
-				st.executeUpdate("INSERT OR IGNORE INTO jobs (title, jobid, description, pay, date) VALUES " +
-						"('${title}', '${jobid}', '${description}', '${pay}', '${LocalDate.now()}')")
+				st.executeUpdate("INSERT OR IGNORE INTO jobs (title, jobid, description, pay, date, workingday, " +
+						"duration, spots) VALUES " +
+						"('${title}', '${jobid}', '${description}', '${pay}', '${LocalDate.now()}', '$wd', '$dur', '$spots')")
 				st.close()
 			}
 		} catch (e: SQLException) {
@@ -64,6 +65,9 @@ class JobsStorageHandler {
 					hmp["pay"] = rs.getString("pay")
 					hmp["description"] = rs.getString("description")
 					hmp["dateSpotted"] = rs.getString("date")
+					hmp["workingDay"] = rs.getString("workingday")
+					hmp["duration"] = rs.getString("duration")
+					hmp["spots"] = rs.getString("spots")
 					jobs.add(hmp)
 				}
 				st.close()
@@ -88,6 +92,9 @@ class JobsStorageHandler {
 					job["pay"] = rs.getString("pay")
 					job["description"] = rs.getString("description")
 					job["dateSpotted"] = rs.getString("date")
+					job["workingDay"] = rs.getString("workingday")
+					job["duration"] = rs.getString("duration")
+					job["spots"] = rs.getString("spots")
 				}
 				st.close()
 			}
@@ -116,24 +123,6 @@ class JobsStorageHandler {
 			println("queryJobById: $e.message")
 		}
 		return isin
-	}
-
-	fun getKeywordsFull(): HashMap<String, Int> {
-		var keywords: HashMap<String, Int> = HashMap()
-		try {
-			var rs: ResultSet? = null
-			val st = conn?.createStatement()
-			if (st != null) {
-				rs = st.executeQuery("SELECT * FROM keywords")
-				while (rs.next()) {
-					keywords[rs.getString("word")] = rs.getInt("hits")
-				}
-				st.close()
-			}
-		} catch (e: SQLException) {
-			println("getKeywordsFull: $e.message")
-		}
-		return keywords
 	}
 
 	fun close() {

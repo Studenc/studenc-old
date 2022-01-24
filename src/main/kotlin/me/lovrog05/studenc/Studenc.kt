@@ -9,7 +9,7 @@ class Studenc(private val url: String) {
 		for (job in jobsArray) {
 			if (job["jobId"]!! != "" && job["title"]!! != "" && job["description"]!! != "" && job["pay"]!! != "") {
 				if (!jobsStorageHandler.isJobIdInDB(job["jobId"]!!)) {
-					jobsStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!)
+					jobsStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!, job["workingDay"]!!, job["duration"]!!, job["spots"]!!)
 				}
 			}
 		}
