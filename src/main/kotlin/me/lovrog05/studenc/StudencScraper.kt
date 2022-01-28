@@ -19,8 +19,6 @@ class StudencScraper(private val url: String) {
 		var delovnik: String = ""
 		var stprostih: String = ""
 		val attr: Elements = article.getElementsByClass("job-attributes")
-		/*println(attr)
-		println("*******************************************************")*/
 		if (attr.isNotEmpty()) {
 			stprostih = attr[1].select("strong")[0].text()
 			if (stprostih.toIntOrNull() != null) {
@@ -47,19 +45,24 @@ class StudencScraper(private val url: String) {
 		return data
 	}
 
-	fun getJobs(): ArrayList<HashMap<String, String>> {
-		val jobs: ArrayList<HashMap<String, String>> = ArrayList()
-		for (pagenum in 1..pageCount) {
-			println("page: $pagenum of $pageCount")
+	fun getPages(): ArrayList<Elements?> {
+		val pages: ArrayList<Elements?> = ArrayList()
+		for (pagenum in 1 .. pageCount) {
+			println("page: $pagenum")
 			val doc: Document = Jsoup.connect("$url?page=$pagenum").get()
 			val prostaDela: Element? = doc.getElementById("prostaDela")
 			var results: Elements? = prostaDela?.getElementById("results")?.children()
 			results?.removeFirst()
-			results?.forEach {
-				jobs.add(getJobData(it))
-			}
+			pages.add(results)
 		}
+		return pages
+	}
 
+	fun getJobs(results: Elements?): ArrayList<HashMap<String, String>> {
+		val jobs: ArrayList<HashMap<String, String>> = ArrayList()
+		results?.forEach {
+			jobs.add(getJobData(it))
+		}
 		return jobs
 	}
 }

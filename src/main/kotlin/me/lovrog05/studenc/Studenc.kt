@@ -1,5 +1,7 @@
 package me.lovrog05.studenc
 
+import org.jsoup.select.Elements
+
 
 class Studenc(private val url: String) {
 	private val scraper: StudencScraper = StudencScraper(url)
@@ -9,11 +11,19 @@ class Studenc(private val url: String) {
 	private var currentHighest: Float = 0F
 
 	fun requestAndStoreJobs() {
-		var jobsArray: ArrayList<HashMap<String, String>> = scraper.getJobs()
-		for (job in jobsArray) {
-			if (job["jobId"]!! != "" && job["title"]!! != "" && job["description"]!! != "" && job["pay"]!! != "") {
-				if (!jobsStorageHandler.isJobIdInDB(job["jobId"]!!)) {
-					jobsStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!, job["workingDay"]!!, job["duration"]!!, job["spots"]!!)
+		var pagesArray: ArrayList<Elements?> = scraper.getPages()
+		var jobsArray: ArrayList<HashMap<String, String>> = ArrayList()
+		var len:Int = 0
+		for (page in pagesArray) {
+			len++
+			println("page $len of ${pagesArray.size}")
+			val jobs = scraper.getJobs(page)
+			for (job in jobs) {
+				jobsArray.add(job)
+				if (job["jobId"]!! != "" && job["title"]!! != "" && job["description"]!! != "" && job["pay"]!! != "") {
+					if (!jobsStorageHandler.isJobIdInDB(job["jobId"]!!)) {
+						jobsStorageHandler.insertJob(job["title"]!!, job["jobId"]!!, job["description"]!!, job["pay"]!!, job["workingDay"]!!, job["duration"]!!, job["spots"]!!)
+					}
 				}
 			}
 		}

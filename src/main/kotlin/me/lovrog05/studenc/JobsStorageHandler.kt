@@ -11,7 +11,7 @@ class JobsStorageHandler {
 
 	init {
 		try {
-			val url = "jdbc:sqlite:/home/lovro/Documents/jobs.db"
+			val url = "jdbc:sqlite:/home/lovro/runtime/jobs.db"
 			// create a connection to the database
 			conn = DriverManager.getConnection(url)
 			println("Connection to SQLite has been established.")
@@ -41,13 +41,12 @@ class JobsStorageHandler {
 		try {
 			val st = conn?.createStatement()
 			if (st != null) {
-				st.executeUpdate("INSERT OR IGNORE INTO jobs (title, jobid, description, pay, date, workingday, " +
-						"duration, spots) VALUES " +
-						"('${title}', '${jobid}', '${description}', '${pay}', '${LocalDate.now()}', '$wd', '$dur', '$spots')")
+				println("'${title}', '${jobid}', '${description}', '${pay}', '${LocalDate.now()}', '${wd}', '${dur}', '${spots}'")
+				st.executeUpdate("INSERT INTO jobs (title, jobid, description, pay, date, workingday, duration, spots) VALUES ('${title}', '${jobid}', '${description}', '${pay}', '${LocalDate.now()}', '${wd}', '${dur}', '${spots}')")
 				st.close()
 			}
 		} catch (e: SQLException) {
-			println("insertjob: $e.message")
+			println("insertjob: $e")
 		}
 	}
 
