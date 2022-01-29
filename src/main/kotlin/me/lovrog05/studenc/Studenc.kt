@@ -6,7 +6,7 @@ import org.jsoup.select.Elements
 class Studenc(private val url: String) {
 	private val scraper: StudencScraper = StudencScraper(url)
 	private val jobsStorageHandler: JobsStorageHandler = JobsStorageHandler()
-	private var currentAvailableJobs: ArrayList<HashMap<String, String>> = ArrayList()
+	var currentAvailableJobs: ArrayList<HashMap<String, String>> = ArrayList()
 	private var currentAverage: Double = 0.0
 	private var currentHighest: Float = 0F
 
@@ -48,6 +48,7 @@ class Studenc(private val url: String) {
 			if (curJob["pay"]?.replace(",", ".")?.toFloatOrNull() != null) {
 				if (curJob["pay"]?.replace(",", ".")?.toFloat() ?: 0F > highestYet) {
 					highestYet = curJob["pay"]?.replace(",", ".")?.toFloat()!!
+					println("highest yet: $highestYet - ${curJob["jobId"]}")
 				}
 			}
 		}

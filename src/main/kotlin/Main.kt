@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
 	val url: String = "https://www.studentski-servis.com/studenti/prosta-dela/"
 	val studenc: Studenc = Studenc(url)
 	studenc.requestAndStoreJobs()
-	var lastUpdated: Long = System.currentTimeMillis()
+
 	embeddedServer(Netty, port=6969) {
 		install(ContentNegotiation)
 		routing {
@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
 					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
 				}
 			}
-			route("/jobs") {
+			route("/alljobs") {
 				get {
 					val response: HashMap<String, ArrayList<HashMap<String, String>>> = HashMap()
 					response["jobs"] = studenc.getStoredJobs()
@@ -46,6 +46,18 @@ fun main(args: Array<String>) {
 					}
 				}
 			}
+			route("/currentjobs") {
+				get {
+					val response: HashMap<String, ArrayList<HashMap<String, String>>> = HashMap()
+					response["jobs"] = studenc.currentAvailableJobs
+					val gson = Gson()
+					call.respondText(
+						gson.toJson(response).toString(),
+						ContentType.Application.Json,
+						status = HttpStatusCode.OK
+					)
+				}
+			}
 			route("/jobstats") {
 				get {
 					val response = studenc.getJobStats()
@@ -53,17 +65,6 @@ fun main(args: Array<String>) {
 					call.respondText(gson.toJson(response).toString(), ContentType.Application.Json, status=HttpStatusCode.OK)
 				}
 			}
-			route("/requestupdate") {
-				post {
-					if ((System.currentTimeMillis() - lastUpdated)/1000 >= 86400) {
-						studenc.requestAndStoreJobs()
-						call.respondText("UPDATE APPROVED", status=HttpStatusCode.OK)
-					} else {
-						call.respondText("UPDATE DENIED - TOO EARLY", status=HttpStatusCode.OK) //too early
-					}
-				}
-			}
-
 		}
 	}.start(wait = true)
 }
