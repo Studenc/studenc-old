@@ -1,6 +1,7 @@
 package me.lovrog05.studenc
 
 import org.jsoup.select.Elements
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 
 class Studenc(private val url: String) {
@@ -46,7 +47,7 @@ class Studenc(private val url: String) {
 		var highestYet: Float = 0F
 		for (curJob in currentAvailableJobs) {
 			if (curJob["pay"]?.replace(",", ".")?.toFloatOrNull() != null) {
-				if (curJob["pay"]?.replace(",", ".")?.toFloat() ?: 0F > highestYet) {
+				if ((curJob["pay"]?.replace(",", ".")?.toFloat() ?: 0F) > highestYet) {
 					highestYet = curJob["pay"]?.replace(",", ".")?.toFloat()!!
 					println("highest yet: $highestYet - ${curJob["jobId"]}")
 				}
@@ -63,14 +64,22 @@ class Studenc(private val url: String) {
 		return jobsStorageHandler.getJobById(id)
 	}
 
-	fun getKeywordHits(word: String): HashMap<String, Int?> {
-		var hits: HashMap<String, Int?> = HashMap()
+	fun getKeywordHits(word: String): HashMap<String, Any> {
+		var hits: HashMap<String, Any> = HashMap()
 		var totalHits: Int = 0
 		for (job in getStoredJobs()) {
-			var currentHits: Int = Statistics.getHitsInString(job["description"]!!, word)
-			hits[job["dateSpotted"]!!] = hits[job["dateSpotted"]!!]?.plus(currentHits) ?: currentHits
-			totalHits += currentHits
+			if (job["jobId"]!! !in hits.keys) {
+				var hitData: HashMap<String, Any> = HashMap()
+				var hitCount = Statistics.getHitsInString(job["description"]!!, word)
+				if (hitCount > 0) {
+					hitData["hits"] = hitCount
+					hitData["dateSpotted"] = job["dateSpotted"]!!
+					hits[job["jobId"]!!] = hitData
+					totalHits += hitCount
+				}
+			}
 		}
+
 		hits["total"] = totalHits
 		return hits
 	}
